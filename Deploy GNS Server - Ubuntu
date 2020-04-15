@@ -1,0 +1,52 @@
+# Deploy GNS Server
+# Reference: https://hacksbrain.com/2018/06/21/installing-gns3-server-on-ubuntu-18-04-lts-bionic-beaver/
+
+addgroup kvm
+addgroup docker
+adduser gns3
+# Complete registration, password gns3
+usermod -aG sudo,kvm,docker gns3
+su gns3
+cd ~
+sudo -i
+cd /home/gns3
+add-apt-repository --remove ppa:gns3/unstable
+add-apt-repository ppa:gns3/ppa
+apt autoremove
+apt-get update
+apt-get upgrade
+
+mkdir /opt/gns3
+chown gns3:gns3 /opt/gns3
+exit
+mkdir /opt/gns3/projects
+mkdir /opt/gns3/images
+
+cd /tmp
+curl https://raw.githubusercontent.com/GNS3/gns3-server/master/scripts/remote-install.sh > gns3-remote-install.sh
+sudo bash gns3-remote-install.sh --with-iou --with-i386-repository
+
+### At this point, the latest version of GNS3 will connect. ###
+
+### Attempts to downgrade GNS3 ###
+
+sudo -i
+systemctl stop gns3
+systemctl disable gns3
+#sudo apt remove gns3-server
+sudo apt install python3-pip
+pip3 install gns3-server==2.2.0
+systemctl enable gns3
+systemctl restart gns3
+
+### Recommended server.conf: ###
+nano /etc/gns3/gns3_server.conf
+#nano ~/.config/GNS3/2.2/gns3_server.conf
+[Server]
+host = 0.0.0.0
+report_errors = True
+images_path = /opt/gns3/images
+projects_path = /opt/gns3/projects
+auth = True
+user = user
+password = password
